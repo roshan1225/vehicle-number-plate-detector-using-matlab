@@ -1,6 +1,6 @@
 # vehicle-number-plate-detector-using-matlab
 
-a=imread(uigetfile('C:\Users\roshan james\OneDrive\Desktop'));
+a=imread(uigetfile('file location'));
 a=rgb2gray(a);
 figure;imshow(a);title('car');
 [r c p]=size(a);
