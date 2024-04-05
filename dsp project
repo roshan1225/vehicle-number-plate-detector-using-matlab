@@ -1,0 +1,77 @@
+% Prompt the user to input the image path
+image_path = input('Enter the full path of the image: ', 's');
+
+% Load the image
+a = imread(image_path);
+a_gray = rgb2gray(a);
+
+figure;
+imshow(a_gray);
+title('Car');
+
+[r, c, ~] = size(a);
+b = a_gray(r/3:r, 1:c);
+
+figure;
+imshow(b);
+title('LP Area');
+
+% Binarize the image based on a threshold
+binary_image = b > 150;
+
+% Fill holes in the binary image
+binary_image_filled = bwfill(binary_image, 'holes');
+
+% Apply median filtering for noise reduction
+binary_image_filtered = medfilt2(binary_image_filled, [5 5]);
+
+% Label connected components
+[L, num] = bwlabel(binary_image_filtered);
+
+% Remove small regions
+for i = 1:num
+    dd = regionprops(L == i, 'Area');
+    if dd.Area < 50000
+        L(L == i) = 0;
+    end
+end
+
+% Label connected components again after removing small regions
+[L2, num2] = bwlabel(L);
+
+% Display the largest connected component
+if num2 > 2
+    for i = 1:num2    
+        aa = regionprops(L2 == i, 'Orientation');
+        if aa.Orientation > 0
+            imshow(L2 == i);
+        end
+    end
+    disp('exit');
+end
+
+% Extract the bounding box of the largest connected component
+bounding_box = regionprops(L2, 'BoundingBox');
+bounding_box = bounding_box.BoundingBox;
+Xmin = floor(bounding_box(2));
+Xmax = floor(bounding_box(2) + bounding_box(4));
+Ymin = floor(bounding_box(1));
+Ymax = floor(bounding_box(1) + bounding_box(3));
+
+% Crop the license plate region
+LP = b(Xmin+25:Xmax-20, Ymin+10:Ymax-10);
+
+figure;
+imshow(LP, []);
+title('Cropped License Plate');
+
+% Calculate the waveform
+waveform = mean(LP, 1);  % Calculate mean along rows (horizontal waveform)
+
+% Plot the waveform
+figure;
+plot(waveform);
+title('Waveform of License Plate');
+xlabel('Pixel Position');
+ylabel('Intensity');
+
